@@ -7,7 +7,7 @@ __plugin__ = "PBS"
 __author__ = 'stacked <stacked.xbmc@gmail.com>'
 __url__ = 'http://code.google.com/p/plugin/'
 __date__ = '02-08-2011'
-__version__ = '1.0.4'
+__version__ = '1.0.3'
 __settings__ = xbmcaddon.Addon( id = 'plugin.video.pbs' )
 
 programs_thumb = os.path.join( __settings__.getAddonInfo( 'path' ), 'resources', 'media', 'programs.png' )
