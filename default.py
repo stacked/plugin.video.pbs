@@ -106,7 +106,7 @@ def build_search_directory( url, page ):
 	title_id_thumb = re.compile('<a title="(.*?)" target="" rel="nofollow" onclick="EZDATA\.trackGaEvent\(\'search\', \'navigation\', \'external\'\);" href="(.*?)"><img src="(.*?)" class="ez-primaryThumb"').findall(data)
 	program = re.compile('<p class="ez-metaextra1 ez-icon">(.*?)</p>').findall(data)
 	plot = re.compile('<p class="ez-desc">(.*?)<div class="(ez-snippets|ez-itemUrl)">', re.DOTALL).findall(data)
-	video_count = re.compile('<b class="ez-total">(.*?)</b>').findall(data)[0]
+	video_count = re.compile('<b class="ez-total">(.*?)</b>').findall(data)
 	if len(title_id_thumb) == 0:
 		dialog = xbmcgui.Dialog()
 		ok = dialog.ok( __plugin__ , __settings__.getLocalizedString( 30004 ) + '\n' + __settings__.getLocalizedString( 30005 ) )
@@ -118,7 +118,7 @@ def build_search_directory( url, page ):
 		u = sys.argv[0] + '?mode=0&name=' + urllib.quote_plus( clean( program[item_count] ) ) + '&program_id=' + urllib.quote_plus( id.rsplit('/')[4] ) + "&topic=" + urllib.quote_plus( 'False' )
 		ok = xbmcplugin.addDirectoryItem( handle = int( sys.argv[1] ), url = u, listitem = listitem, isFolder = False )
 		item_count += 1	
-	if ( int( video_count ) - ( 10 * int( page ) ) ) > 10:
+	if ( int( video_count[0] ) - ( 10 * int( page ) ) ) > 10:
 		listitem = xbmcgui.ListItem( label = '[Next Page (' + str( int( page ) + 2 ) + ')]' , iconImage = next_thumb, thumbnailImage = next_thumb )
 		u = sys.argv[0] + "?mode=6" + "&page=" + str( int( page ) + 1 ) + "&url=" + urllib.quote_plus( save_url )
 		ok = xbmcplugin.addDirectoryItem( handle = int( sys.argv[1] ), url = u, listitem = listitem, isFolder = True )
