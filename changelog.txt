@@ -1,3 +1,7 @@
+[B]Version 2.0.0[/B]
+
+- Version bump for eden, 1.0.5 to 2.0.0
+
 [B]Version 1.0.5[/B]
 
 - Updated addon to use PBS COVE API service
