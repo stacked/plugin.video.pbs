@@ -15,6 +15,7 @@ search_thumb = os.path.join( __settings__.getAddonInfo( 'path' ), 'resources', '
 next_thumb = os.path.join( __settings__.getAddonInfo( 'path' ), 'resources', 'media', 'next.png' )
 cove = coveapi.connect(base64.b64decode(__settings__.getLocalizedString( 30010 )), 
                        base64.b64decode(__settings__.getLocalizedString( 30011 )))
+pluginQuery = sys.argv[2]
 				
 def open_url( url ):
 	print 'PBS - URL: ' + url
@@ -225,6 +226,27 @@ def play_mp4( name, url, thumb, plot, studio, starttime ):
 				xbmc.Player( xbmc.PLAYER_CORE_DVDPLAYER ).seekTime( int( starttime ) / 1000 )
 				break
 
+def play( video_id ):
+	# 'Play video by video_id found in embeds/at website. Not the actual video id.'
+	data = cove.videos.filter(fields='associated_images,mediafiles,categories',filter_tp_media_object_id=video_id)
+	if data:
+		results = data['results'][0]
+		if not results:
+			return
+		if results['associated_images'] != None and len(results['associated_images']) > 0:
+			thumb = results['associated_images'][0]['url']
+		else:
+			thumb = 'None'
+		if results['mediafiles'][0]['video_data_url'] != None:
+			url = results['mediafiles'][0]['video_data_url']
+			if results['mediafiles'][0]['video_download_url'] != None:
+				backup_url = results['mediafiles'][0]['video_download_url']
+			else:
+				backup_url = 'None'	
+		else:
+			url = results['mediafiles'][0]['video_download_url']			
+		play_video( results['title'], url, thumb, results['long_description'].encode('utf-8'), 'Urlresolver', None, backup_url )
+
 def get_params():
 	param = []
 	paramstring = sys.argv[2]
@@ -301,8 +323,12 @@ except:
 	pass
 
 if mode == None:
-	print __plugin__ + ' ' + __version__ + ' ' + __date__
-	build_main_directory()
+	if pluginQuery.startswith('?play='):
+		videoId = pluginQuery[6:].strip()
+		play(videoId)
+	else:
+		print __plugin__ + ' ' + __version__ + ' ' + __date__
+		build_main_directory()
 elif mode == 0:
 	find_videos( name, program_id, topic, page )
 elif mode == 1:
