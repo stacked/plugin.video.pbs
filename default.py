@@ -5,7 +5,7 @@ from urllib2 import Request, urlopen, URLError, HTTPError
 __plugin__ = "PBS"
 __author__ = 'stacked <stacked.xbmc@gmail.com>'
 __url__ = 'http://code.google.com/p/plugin/'
-__date__ = '11-28-2011'
+__date__ = '06-20-2012'
 __version__ = '2.0.0'
 __settings__ = xbmcaddon.Addon( id = 'plugin.video.pbs' )
 
@@ -15,7 +15,6 @@ search_thumb = os.path.join( __settings__.getAddonInfo( 'path' ), 'resources', '
 next_thumb = os.path.join( __settings__.getAddonInfo( 'path' ), 'resources', 'media', 'next.png' )
 cove = coveapi.connect(base64.b64decode(__settings__.getLocalizedString( 30010 )), 
                        base64.b64decode(__settings__.getLocalizedString( 30011 )))
-pluginQuery = sys.argv[2]
 				
 def open_url( url ):
 	print 'PBS - URL: ' + url
@@ -197,7 +196,7 @@ def play_video( name, url, thumb, plot, studio, starttime, backup_url ):
 	if base == 'http://ad.doubleclick.net/adx/':
 		src_data = src.split( "&lt;break&gt;" )
 		rtmp_url = src_data[0] + "mp4:" + src_data[1].replace('mp4:','')
-	elif base == 'http://www-tc.pbs.org/cove-media/':
+	elif base == 'http://www-tc.pbs.org/cove-media/' or base.find('amazonaws.com') != -1:
 		play_mp4( name, base+src.replace('mp4:',''), thumb, plot, studio, starttime )
 		return
 	else:
@@ -225,27 +224,6 @@ def play_mp4( name, url, thumb, plot, studio, starttime ):
 				xbmc.sleep( 50 )
 				xbmc.Player( xbmc.PLAYER_CORE_DVDPLAYER ).seekTime( int( starttime ) / 1000 )
 				break
-
-def play( video_id ):
-	# 'Play video by video_id found in embeds/at website. Not the actual video id.'
-	data = cove.videos.filter(fields='associated_images,mediafiles,categories',filter_tp_media_object_id=video_id)
-	if data:
-		results = data['results'][0]
-		if not results:
-			return
-		if results['associated_images'] != None and len(results['associated_images']) > 0:
-			thumb = results['associated_images'][0]['url']
-		else:
-			thumb = 'None'
-		if results['mediafiles'][0]['video_data_url'] != None:
-			url = results['mediafiles'][0]['video_data_url']
-			if results['mediafiles'][0]['video_download_url'] != None:
-				backup_url = results['mediafiles'][0]['video_download_url']
-			else:
-				backup_url = 'None'	
-		else:
-			url = results['mediafiles'][0]['video_download_url']			
-		play_video( results['title'], url, thumb, results['long_description'].encode('utf-8'), 'Urlresolver', None, backup_url )
 
 def get_params():
 	param = []
@@ -323,11 +301,10 @@ except:
 	pass
 
 if mode == None:
-	if pluginQuery.startswith('?play='):
-		videoId = pluginQuery[6:].strip()
-		play(videoId)
+	print __plugin__ + ' ' + __version__ + ' ' + __date__
+	if sys.argv[2].startswith('?play='):
+		find_videos( 'Video', sys.argv[2][6:].strip(), 'False', page )
 	else:
-		print __plugin__ + ' ' + __version__ + ' ' + __date__
 		build_main_directory()
 elif mode == 0:
 	find_videos( name, program_id, topic, page )
