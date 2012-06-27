@@ -46,7 +46,8 @@ def open_url( url ):
 
 def clean( string ):
 	list = [( '&amp;', '&' ), ( '&quot;', '"' ), ( '&#39;', '\'' ), ( '\n','' ), ( '\r', ''), ( '\t', ''), ( '</p>', '' ), ( '<br />', ' ' ), 
-			( '<br/>', ' ' ), ( '<b>', '' ), ( '</b>', '' ), ( '<p>', '' ), ( '<div>', '' ), ( '</div>', '' ), ( '<strong>', ' ' ), ( '<\/strong>', ' ' ), ( '</strong>', ' ' )]
+			( '<br/>', ' ' ), ( '<b>', '' ), ( '</b>', '' ), ( '<p>', '' ), ( '<div>', '' ), ( '</div>', '' ), ( '<strong>', ' ' ), 
+			( '<\/strong>', ' ' ), ( '</strong>', ' ' ), ( '&hellip;', '...' ), ( '&ntilde;', 'n' )]
 	for search, replace in list:
 		string = string.replace( search, replace )
 	return string
@@ -65,10 +66,13 @@ def build_main_directory():
 	xbmcplugin.addSortMethod( handle = int(sys.argv[1]), sortMethod = xbmcplugin.SORT_METHOD_NONE )
 	xbmcplugin.endOfDirectory( int( sys.argv[1] ) )
 
-def build_programs_directory( page ):
+def build_programs_directory( name, page ):
 	start = str( 200 * page )
 	#data = cove.programs.filter(fields='associated_images,mediafiles,categories',filter_categories__namespace__name='COVE Taxonomy',order_by='title',limit_start=start)['results']
-	data = cove.programs.filter(fields='associated_images,mediafiles',filter_producer__name='PBS',order_by='title',limit_start=start)['results']
+	if name:
+		data = cove.programs.filter(fields='associated_images,mediafiles',filter_producer__name='PBS',order_by='title',limit_start=start,filter_title=name)['results']
+	else:
+		data = cove.programs.filter(fields='associated_images,mediafiles',filter_producer__name='PBS',order_by='title',limit_start=start)['results']
 	for results in data:
 		if len(results['nola_root'].strip()) != 0:
 			if len(results['associated_images']) >= 2:
@@ -132,6 +136,10 @@ def build_search_directory( url, page ):
 		u = sys.argv[0] + '?mode=0&name=' + urllib.quote_plus( clean( program[item_count] ) ) + '&program_id=' + urllib.quote_plus( id.rsplit('/')[4] ) + "&topic=" + urllib.quote_plus( 'False' )
 		ok = xbmcplugin.addDirectoryItem( handle = int( sys.argv[1] ), url = u, listitem = listitem, isFolder = False )
 		item_count += 1	
+	xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_STUDIO )
+	xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_LABEL )
+	if page == 0:
+		build_programs_directory( save_url.replace( '%20', ' ' ), 0 )
 	if ( int( video_count[0] ) - ( 10 * int( page ) ) ) > 10:
 		listitem = xbmcgui.ListItem( label = '[Next Page (' + str( int( page ) + 2 ) + ')]' , iconImage = next_thumb, thumbnailImage = next_thumb )
 		listitem.setProperty('fanart_image',fanart)
@@ -144,6 +152,7 @@ def build_search_directory( url, page ):
 def find_videos( name, program_id, topic, page ):
 	start = str( 200 * page )
 	url = 'None'
+	backup_url = None
 	if topic == 'True':
 		program_id = 'program_id'
 		data = cove.videos.filter(fields='associated_images,mediafiles,categories',filter_categories__name=name,filter_categories__namespace__name='COVE Taxonomy',order_by='-airdate',filter_type='Episode',filter_producer__name='PBS',filter_availability_status='Available',limit_start=start)['results']
@@ -191,7 +200,7 @@ def find_videos( name, program_id, topic, page ):
 				u = sys.argv[0] + "?mode=" + mode + "&name=" + urllib.quote_plus( results['title'].encode('utf-8') ) + "&url=" + urllib.quote_plus( url ) + "&thumb=" + urllib.quote_plus( thumb ) + "&plot=" + urllib.quote_plus( results['long_description'].encode('utf-8') ) + "&studio=" + urllib.quote_plus( name ) + "&backup_url=" + urllib.quote_plus( backup_url )
 				ok = xbmcplugin.addDirectoryItem( handle = int( sys.argv[1] ), url = u, listitem = listitem, isFolder = False )
 	if topic == 'False':
-		play_video( results['title'], url, thumb, results['long_description'].encode('utf-8'), name, None, backup_url )
+		play_video( results['title'].encode('utf-8'), url, thumb, results['long_description'].encode('utf-8'), name.encode('utf-8'), None, backup_url )
 		return
 	if len(data) == 0:
 		dialog = xbmcgui.Dialog()
@@ -353,7 +362,7 @@ if mode == None:
 elif mode == 0:
 	find_videos( name, program_id, topic, page )
 elif mode == 1:
-	build_programs_directory( page )
+	build_programs_directory( name, page )
 elif mode == 2:
 	build_topics_directory()
 elif mode == 4:	
