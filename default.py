@@ -5,8 +5,8 @@ from urllib2 import Request, urlopen, URLError, HTTPError
 plugin = "PBS"
 __author__ = 'stacked <stacked.xbmc@gmail.com>'
 __url__ = 'http://code.google.com/p/plugin/'
-__date__ = '11-28-2012'
-__version__ = '2.0.4'
+__date__ = '12-13-2012'
+__version__ = '2.0.5'
 settings = xbmcaddon.Addon( id = 'plugin.video.pbs' )
 buggalo.SUBMIT_URL = 'http://www.xbmc.byethost17.com/submit.php'
 dbg = False
@@ -219,7 +219,7 @@ def find_videos( name, program_id, topic, page ):
 			else:
 				url = results['mediafiles'][playable]['video_download_url']
 				mode = '7'
-			infoLabels = { "Title": results['title'].encode('utf-8'), "Director": "PBS", "Studio": name, "Plot": results['long_description'].encode('utf-8'), "Duration": str(datetime.timedelta(milliseconds=int(results['mediafiles'][0]['length_mseconds']))), "Aired": results['airdate'].rsplit(' ')[0] }
+			infoLabels = { "Title": results['title'].encode('utf-8'), "Director": "PBS", "Studio": name, "Plot": results['long_description'].encode('utf-8'), "Duration": int(results['mediafiles'][0]['length_mseconds'])/1000, "Aired": results['airdate'].rsplit(' ')[0] }
 			u = { 'mode': mode, 'name': urllib.quote_plus( results['title'].encode('utf-8') ), 'url': urllib.quote_plus( url ), 'thumb': urllib.quote_plus( thumb ), 'plot': urllib.quote_plus( results['long_description'].encode('utf-8') ), 'studio': urllib.quote_plus( name ), 'backup_url': urllib.quote_plus( backup_url ) }
 			ListItem(label = results['title'].encode('utf-8'), image = thumb, url = u, isFolder = False, infoLabels = infoLabels)
 	if topic == 'False':
@@ -247,18 +247,28 @@ def play_video( name, url, thumb, plot, studio, starttime, backup_url ):
 		ok = dialog.ok( plugin , settings.getLocalizedString( 30008 ) )
 		return
 	if url.find('http://urs.pbs.org/redirect/') != -1:
-		print 'PBS - Using backup_url'
-		if backup_url != 'None':
-			play_mp4( name, backup_url, thumb, plot, studio, starttime )
+		try:
+			import requests
+			headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20100101 Firefox/15.0.1'}
+			config = {'max_retries': 10}
+			r = requests.head(url , headers=headers, config=config, allow_redirects=False)
+			new_url = r.headers['location']
+			play_mp4( name, new_url, thumb, plot, studio, starttime )
 			return
-		else:
-			dialog = xbmcgui.Dialog()
-			ok = dialog.ok( plugin , settings.getLocalizedString( 30008 ) )
-			ok = dialog.ok(plugin, settings.getLocalizedString( 30051 ))
-			buggalo.addExtraData('url', url)
-			buggalo.addExtraData('info', studio + ' - ' + name)
-			raise Exception("PBS Kids backup_url ERROR")
-			return
+		except  Exception, e:
+			print 'PBS - Using backup_url'
+			if backup_url != 'None':
+				play_mp4( name, backup_url, thumb, plot, studio, starttime )
+				return
+			else:
+				dialog = xbmcgui.Dialog()
+				ok = dialog.ok( plugin , settings.getLocalizedString( 30008 ) )
+				ok = dialog.ok(plugin, settings.getLocalizedString( 30051 ))
+				buggalo.addExtraData('url', url)
+				buggalo.addExtraData('error', str(e))
+				buggalo.addExtraData('info', studio + ' - ' + name)
+				raise Exception("PBS Kids backup_url ERROR")
+				return
 	data = open_url( url + '&format=SMIL' )
 	print 'PBS - ' + studio + ' - ' + name
 	try:
@@ -326,6 +336,11 @@ def ListItem(label, image, url, isFolder, infoLabels = False):
 	listitem.setProperty('fanart_image', fanart)
 	if infoLabels:
 		listitem.setInfo( type = "Video", infoLabels = infoLabels )
+		if "Duration" in infoLabels:
+			if hasattr( listitem, "addStreamInfo" ):
+				listitem.addStreamInfo('video', { 'duration': infoLabels["Duration"] })
+			else:
+				listitem.setInfo( type="Video", infoLabels={ "Duration": str(datetime.timedelta(milliseconds=int(infoLabels["Duration"])*1000)) } )
 	if not isFolder:
 		listitem.setProperty('IsPlayable', 'true')
 	u = sys.argv[0] + '?'
@@ -344,7 +359,7 @@ def open_url(url):
 			data = get_page(url)
 			if data['content'] != None and data['error'] == None:
 				return data['content']
-			if data['error'] == 'HTTP Error 404: NOT FOUND':
+			if data['error'].find('404:') != -1:
 				break
 		except Exception, e:
 			data['error'] = str(e)
