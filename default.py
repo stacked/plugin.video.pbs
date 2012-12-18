@@ -5,8 +5,8 @@ from urllib2 import Request, urlopen, URLError, HTTPError
 plugin = "PBS"
 __author__ = 'stacked <stacked.xbmc@gmail.com>'
 __url__ = 'http://code.google.com/p/plugin/'
-__date__ = '12-13-2012'
-__version__ = '2.0.5'
+__date__ = '12-17-2012'
+__version__ = '2.0.6'
 settings = xbmcaddon.Addon( id = 'plugin.video.pbs' )
 buggalo.SUBMIT_URL = 'http://www.xbmc.byethost17.com/submit.php'
 dbg = False
@@ -48,7 +48,6 @@ def build_main_directory():
 	except:
 		pass
 	xbmcplugin.addSortMethod( handle = int(sys.argv[1]), sortMethod = xbmcplugin.SORT_METHOD_NONE )
-	xbmcplugin.setContent(int( sys.argv[1] ), 'episodes')
 	setViewMode("501")
 	xbmcplugin.endOfDirectory( int( sys.argv[1] ) )
 	
@@ -107,7 +106,6 @@ def build_programs_directory( name, page ):
 		# u = { 'mode': '1', 'page': str( int( page ) + 1 ) }
 		# ListItem(label = '[Next Page (' + str( int( page ) + 2 ) + ')]', image = next_thumb, url = u, isFolder = True, infoLabels = False)
 	xbmcplugin.addSortMethod( handle = int(sys.argv[1]), sortMethod = xbmcplugin.SORT_METHOD_NONE )
-	xbmcplugin.setContent(int( sys.argv[1] ), 'episodes')
 	if name == settings.getLocalizedString( 30014 ):
 		setViewMode("500")
 	else:
@@ -123,7 +121,6 @@ def build_topics_directory():
 			ListItem(label = results['name'], image = topics_thumb, url = u, isFolder = True, infoLabels = False)
 			item = results['name']
 	xbmcplugin.addSortMethod( handle = int(sys.argv[1]), sortMethod = xbmcplugin.SORT_METHOD_NONE )
-	xbmcplugin.setContent(int( sys.argv[1] ), 'episodes')
 	setViewMode("515")
 	xbmcplugin.endOfDirectory( int( sys.argv[1] ) )
 
@@ -165,7 +162,6 @@ def build_search_directory( url, page ):
 		ListItem(label = '[Next Page (' + str( int( page ) + 2 ) + ')]', image = next_thumb, url = u, isFolder = True, infoLabels = False)
 	xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_STUDIO )
 	xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_LABEL )
-	xbmcplugin.setContent(int( sys.argv[1] ), 'episodes')
 	setViewMode("503")
 	xbmcplugin.endOfDirectory( int( sys.argv[1] ) )
 
@@ -237,7 +233,6 @@ def find_videos( name, program_id, topic, page ):
 	xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_UNSORTED )
 	xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RUNTIME )
 	xbmcplugin.addSortMethod( handle=int( sys.argv[ 1 ] ), sortMethod=xbmcplugin.SORT_METHOD_LABEL )
-	xbmcplugin.setContent(int( sys.argv[1] ), 'episodes')
 	setViewMode("503")
 	xbmcplugin.endOfDirectory( int( sys.argv[1] ) )
 
@@ -267,7 +262,7 @@ def play_video( name, url, thumb, plot, studio, starttime, backup_url ):
 				buggalo.addExtraData('url', url)
 				buggalo.addExtraData('error', str(e))
 				buggalo.addExtraData('info', studio + ' - ' + name)
-				raise Exception("PBS Kids backup_url ERROR")
+				raise Exception("redirect_url ERROR")
 				return
 	data = open_url( url + '&format=SMIL' )
 	print 'PBS - ' + studio + ' - ' + name
@@ -320,14 +315,14 @@ def play_video( name, url, thumb, plot, studio, starttime, backup_url ):
 	else:
 		rtmp_url = base
 		playpath = "mp4:" + src.replace('mp4:','')
-	listitem = xbmcgui.ListItem( label = name, iconImage = "DefaultVideo.png", thumbnailImage = thumb, path = clean( rtmp_url ))
+	listitem = xbmcgui.ListItem( label = name, iconImage = thumb, thumbnailImage = thumb, path = clean( rtmp_url ))
 	listitem.setInfo( type="Video", infoLabels={ "Title": name , "Director": "PBS", "Studio": "PBS: " + studio, "Plot": plot } )
 	if playpath != None:
 		listitem.setProperty("PlayPath", playpath)
 	xbmcplugin.setResolvedUrl( handle = int( sys.argv[1] ), succeeded = True, listitem = listitem )
 
 def play_mp4( name, url, thumb, plot, studio, starttime ):
-	listitem = xbmcgui.ListItem( label = name, iconImage = "DefaultVideo.png", thumbnailImage = thumb, path = clean( url ) )
+	listitem = xbmcgui.ListItem( label = name, iconImage = thumb, thumbnailImage = thumb, path = clean( url ) )
 	listitem.setInfo( type="Video", infoLabels={ "Title": name , "Director": "PBS", "Studio": "PBS: " + studio, "Plot": plot } )
 	xbmcplugin.setResolvedUrl( handle = int( sys.argv[1] ), succeeded = True, listitem = listitem )
 
@@ -394,6 +389,7 @@ def get_page(url):
 		
 def setViewMode(id):
 	if xbmc.getSkinDir() == "skin.confluence":
+		xbmcplugin.setContent(int( sys.argv[1] ), 'episodes')
 		xbmc.executebuiltin("Container.SetViewMode(" + id + ")")
 
 def getParameters(parameterString):

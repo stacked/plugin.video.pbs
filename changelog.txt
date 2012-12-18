@@ -1,3 +1,8 @@
+[B]Version 2.0.6[/B]
+
+- Fixed access_voilation error
+- Fixed 'NoneType' has no len()" error
+
 [B]Version 2.0.5[/B]
 
 - Fixed duration issue in Frodo by using addStreamInfo()
