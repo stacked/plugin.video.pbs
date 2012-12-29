@@ -1,3 +1,7 @@
+[B]Version 2.0.8[/B]
+
+- Updated code to be compatible with Requests v1.0.4
+
 [B]Version 2.0.7[/B]
 
 - Fixed duration time issue

@@ -6,7 +6,7 @@ plugin = "PBS"
 __author__ = 'stacked <stacked.xbmc@gmail.com>'
 __url__ = 'http://code.google.com/p/plugin/'
 __date__ = '12-29-2012'
-__version__ = '2.0.7'
+__version__ = '2.0.8'
 settings = xbmcaddon.Addon( id = 'plugin.video.pbs' )
 buggalo.SUBMIT_URL = 'http://www.xbmc.byethost17.com/submit.php'
 dbg = False
@@ -249,11 +249,10 @@ def play_video( name, url, thumb, plot, studio, starttime, backup_url ):
 		try:
 			import requests
 			status = 0
-			headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20100101 Firefox/15.0.1'}
-			config = {'max_retries': 10}
+			headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0'}
 			while status <= 10:
 				if status != 0: time.sleep(3)
-				r = requests.head(url , headers=headers, config=config, allow_redirects=False)
+				r = requests.head(url , headers=headers, allow_redirects=False)
 				new_url = r.headers['location']
 				if new_url != None: break
 				status += 1
