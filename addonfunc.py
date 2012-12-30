@@ -1,7 +1,7 @@
 '''
 Addon Functions
-date: 12-28-2012
-version: 0.0.1
+date: 12-29-2012
+version: 0.0.2
 '''
 
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin, urllib2, sys, time, datetime, buggalo
@@ -50,7 +50,7 @@ def getUrl(url, gzip = False):
 	dialog = xbmcgui.Dialog()
 	ret = dialog.yesno(plugin, settings.getLocalizedString( 30050 ), data['error'], '', settings.getLocalizedString( 30052 ), settings.getLocalizedString( 30053 ))
 	if ret == False:
-		open_url(url)
+		getUrl(url)
 	else:
 		ok = dialog.ok(plugin, settings.getLocalizedString( 30051 ))
 		buggalo.addExtraData('url', url)
