@@ -220,7 +220,6 @@ def find_videos( name, program_id, topic, page ):
 				thumb = 'None'
 			for videos in results['mediafiles']:
 				encoding[clean_type(videos['video_encoding']['name'])] = { 'url': videos['video_data_url'], 'backup_url': videos['video_download_url'] }
-			print encoding
 			cycle = 0
 			while cycle <= 2:
 				if type[cycle] in encoding:
